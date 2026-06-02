@@ -132,6 +132,17 @@ function App() {
   const [error, setError] = useState(null)
   const [savedPlaylists, setSavedPlaylists] = useState(new Set())
 
+  // Debug log on start to help identify config mismatches
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+    const redirectUri = window.location.origin + '/';
+    console.log("=== Letterfy Config Info ===");
+    console.log("Vite Mode:", import.meta.env.MODE);
+    console.log("Spotify Client ID:", clientId ? `${clientId.substring(0, 4)}...${clientId.substring(clientId.length - 4)}` : "MISSING ❌");
+    console.log("Spotify Redirect URI:", redirectUri);
+    console.log("============================");
+  }, []);
+
   // Check for Spotify token on load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -181,7 +192,11 @@ function App() {
       <div className="container">
         <nav className="navbar">
           <div className="logo text-gradient" style={{ cursor: movies.length > 0 ? 'pointer' : 'default' }} onClick={() => { setMovies([]); setError(null) }}>
-            <Film size={28} />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" width="28" height="28" style={{ flexShrink: 0 }}>
+              <path d="M 80,284 A 176,176 0 0,1 432,284" stroke="#1db954" strokeWidth="44" strokeLinecap="round" />
+              <rect x="44" y="254" width="72" height="150" rx="36" fill="#1db954" />
+              <rect x="396" y="254" width="72" height="150" rx="36" fill="#1db954" />
+            </svg>
             Letterfy
           </div>
           {!spotifyToken ? (
