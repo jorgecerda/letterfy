@@ -28,6 +28,13 @@ const base64encode = (input) => {
 }
 
 export const loginToSpotify = async () => {
+  if (!CLIENT_ID) {
+    const errorMsg = "Spotify Client ID (VITE_SPOTIFY_CLIENT_ID) is missing! Please set this variable in your Netlify Environment Variables (and trigger a redeploy) or local .env file.";
+    alert(errorMsg);
+    console.error(errorMsg);
+    return;
+  }
+
   const codeVerifier = generateRandomString(64);
   window.localStorage.setItem('code_verifier', codeVerifier);
   const hashed = await sha256(codeVerifier);

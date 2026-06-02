@@ -1,12 +1,20 @@
 export const fetchLetterboxdRSS = async (username) => {
   try {
-    // Use corsproxy.io to bypass CORS
-    const rssUrl = `https://letterboxd.com/${username}/rss/`;
-    const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(rssUrl)}`;
+    let url;
+    if (import.meta.env.DEV) {
+      // In development, use corsproxy.io to bypass CORS in the browser directly
+      const rssUrl = `https://letterboxd.com/${username}/rss/`;
+      url = `https://corsproxy.io/?url=${encodeURIComponent(rssUrl)}`;
+    } else {
+      // In production, fetch via our Netlify function (rewritten through /api/* redirect)
+      url = `/api/rss?username=${encodeURIComponent(username)}`;
+    }
     
-    const response = await fetch(proxyUrl);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    if (response.status === 404) throw new Error('User not found');
+    const response = await fetch(url);
+    if (!response.ok) {
+      if (response.status === 404) throw new Error('User not found');
+      throw new Error(`HTTP ${response.status}`);
+    }
     
     // Read the raw XML text
     const xmlText = await response.text();
