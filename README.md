@@ -2,6 +2,8 @@
 
 > Discover Spotify playlists based on your Letterboxd diary.
 
+🌐 **Live at [letterfyio.netlify.app](https://letterfyio.netlify.app/)**
+
 ## About
 
 **Letterfy** bridges your film and music worlds. Enter your Letterboxd username to see your recent watches, then click any title to instantly find Spotify playlists and soundtracks — and save them directly to your Spotify library.
