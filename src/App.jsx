@@ -518,15 +518,17 @@ function App() {
           <button className="modal-close-btn" onClick={() => setPreviewPlaylistId(null)} aria-label="Close Preview">
             &times;
           </button>
-          <iframe
-            src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
-            height="380"
-            frameBorder="0"
-            allowFullScreen=""
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            style={{ border: 'none' }}
-          ></iframe>
+          <div className="spotify-embed-wrapper">
+            <iframe
+              src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
+              height="380"
+              frameBorder="0"
+              allowFullScreen=""
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              style={{ border: 'none' }}
+            ></iframe>
+          </div>
         </div>
       </div>
     )}
