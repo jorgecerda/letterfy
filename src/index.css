@@ -49,14 +49,16 @@ body {
 }
 
 .text-gradient {
-  background: var(--gradient-brand);
+  color: var(--accent-primary); /* Solid fallback green */
+  background-image: linear-gradient(135deg, #00e676 0%, #1db954 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .text-gradient-alt {
-  background: var(--gradient-letterboxd);
+  color: #ff8000; /* Solid fallback orange */
+  background-image: linear-gradient(135deg, #ff8000 0%, #00e5ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
