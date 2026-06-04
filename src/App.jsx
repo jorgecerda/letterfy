@@ -88,10 +88,16 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
             <img
               src={playlist.images[0]?.url}
               alt={playlist.name}
+              onClick={() => onPreview(playlist.id)}
+              className="playlist-cover-clickable"
               style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', aspectRatio: '1/1', objectFit: 'cover' }}
             />
           ) : (
-            <div style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', aspectRatio: '1/1', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              onClick={() => onPreview(playlist.id)}
+              className="playlist-cover-clickable"
+              style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', aspectRatio: '1/1', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
               <Music size={36} color="var(--text-secondary)" />
             </div>
           )}
