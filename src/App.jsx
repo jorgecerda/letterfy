@@ -103,17 +103,17 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
             <button
               className="btn btn-primary"
               style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
-              onClick={() => onSave(playlist.id)}
-              disabled={savedPlaylists.has(playlist.id)}
+              onClick={() => onPreview(playlist.id)}
             >
-              {savedPlaylists.has(playlist.id) ? '✓ Saved' : 'Save'}
+              Preview
             </button>
             <button
               className="btn btn-secondary"
               style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
-              onClick={() => onPreview(playlist.id)}
+              onClick={() => onSave(playlist.id)}
+              disabled={savedPlaylists.has(playlist.id)}
             >
-              Preview
+              {savedPlaylists.has(playlist.id) ? '✓ Saved' : 'Save'}
             </button>
             <a
               href={playlist.external_urls?.spotify}
@@ -209,6 +209,18 @@ function App() {
   const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
   const [demoUser, setDemoUser] = useState('')
   const [previewPlaylistId, setPreviewPlaylistId] = useState(null)
+
+  // Prevent background body scroll when the modal lightbox is open
+  useEffect(() => {
+    if (previewPlaylistId) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [previewPlaylistId])
 
   // Select a random popular user on mount to offer a demo experience
   useEffect(() => {
@@ -390,7 +402,8 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <>
+      <div className="app-container">
       <div className="container">
         <nav className="navbar">
           <div className="logo text-gradient" style={{ cursor: movies.length > 0 ? 'pointer' : 'default' }} onClick={() => { setMovies([]); setError(null); setExpandedMovieTitle(null) }}>
@@ -497,28 +510,39 @@ function App() {
           )}
         </main>
       </div>
-
-      {previewPlaylistId && (
-        <div className="modal-overlay" onClick={() => setPreviewPlaylistId(null)}>
-          <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setPreviewPlaylistId(null)} aria-label="Close Preview">
-              &times;
-            </button>
-            <iframe
-              src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
-              width="100%"
-              height="380"
-              frameBorder="0"
-              allowFullScreen=""
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              style={{ borderRadius: '12px', border: 'none' }}
-            ></iframe>
-          </div>
-        </div>
-      )}
     </div>
-  )
+
+    {previewPlaylistId && (
+      <div className="modal-overlay" onClick={() => setPreviewPlaylistId(null)}>
+        <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close-btn" onClick={() => setPreviewPlaylistId(null)} aria-label="Close Preview">
+            &times;
+          </button>
+          <iframe
+            src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
+            width="100%"
+            height="380"
+            frameBorder="0"
+            allowFullScreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            style={{ borderRadius: '12px', border: 'none' }}
+          ></iframe>
+          <p style={{
+            fontSize: '0.75rem',
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            marginTop: '12px',
+            lineHeight: '1.4',
+            padding: '0 8px'
+          }}>
+            Note: On mobile, Spotify requires you to be logged in to Spotify in your mobile browser, or it may redirect to the Spotify app to play previews.
+          </p>
+        </div>
+      </div>
+    )}
+  </>
+)
 }
 
 export default App
