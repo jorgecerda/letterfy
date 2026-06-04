@@ -4,7 +4,7 @@ import { fetchLetterboxdRSS } from './utils/letterboxd'
 import { loginToSpotify, getTokenFromCode, getStoredToken, searchSpotifyPlaylists, followPlaylist } from './utils/spotify'
 import './App.css'
 
-function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, headerRef }) {
+function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, headerRef, onPreview }) {
   const [playlists, setPlaylists] = useState(null) // null = not fetched yet
   const [loading, setLoading] = useState(false)
   const openTimeRef = useRef(0)
@@ -102,18 +102,25 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
               className="btn btn-primary"
-              style={{ flex: 1, padding: '6px 12px', fontSize: '0.8rem' }}
+              style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
               onClick={() => onSave(playlist.id)}
               disabled={savedPlaylists.has(playlist.id)}
             >
               {savedPlaylists.has(playlist.id) ? '✓ Saved' : 'Save'}
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
+              onClick={() => onPreview(playlist.id)}
+            >
+              Preview
             </button>
             <a
               href={playlist.external_urls?.spotify}
               target="_blank"
               rel="noreferrer"
               className="btn btn-secondary"
-              style={{ padding: '6px 10px', borderRadius: '8px' }}
+              style={{ padding: '6px 8px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <ExternalLink size={16} />
             </a>
@@ -124,7 +131,7 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
   )
 }
 
-function AccordionItem({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, onToggle }) {
+function AccordionItem({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, onToggle, onPreview }) {
   const headerRef = useRef(null)
 
   useEffect(() => {
@@ -184,6 +191,7 @@ function AccordionItem({ movie, username, spotifyToken, savedPlaylists, onSave, 
             onSave={onSave}
             isOpen={isOpen}
             headerRef={headerRef}
+            onPreview={onPreview}
           />
         </div>
       </div>
@@ -200,6 +208,7 @@ function App() {
   const [savedPlaylists, setSavedPlaylists] = useState(new Set())
   const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
   const [demoUser, setDemoUser] = useState('')
+  const [previewPlaylistId, setPreviewPlaylistId] = useState(null)
 
   // Select a random popular user on mount to offer a demo experience
   useEffect(() => {
@@ -480,6 +489,7 @@ function App() {
                     onSave={handleSavePlaylist}
                     isOpen={expandedMovieTitle === movie.title}
                     onToggle={() => setExpandedMovieTitle(expandedMovieTitle === movie.title ? null : movie.title)}
+                    onPreview={setPreviewPlaylistId}
                   />
                 ))}
               </div>
@@ -487,6 +497,26 @@ function App() {
           )}
         </main>
       </div>
+
+      {previewPlaylistId && (
+        <div className="modal-overlay" onClick={() => setPreviewPlaylistId(null)}>
+          <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setPreviewPlaylistId(null)} aria-label="Close Preview">
+              &times;
+            </button>
+            <iframe
+              src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
+              width="100%"
+              height="380"
+              frameBorder="0"
+              allowFullScreen=""
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              style={{ borderRadius: '12px', border: 'none' }}
+            ></iframe>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
