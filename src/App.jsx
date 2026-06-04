@@ -199,6 +199,23 @@ function App() {
   const [error, setError] = useState(null)
   const [savedPlaylists, setSavedPlaylists] = useState(new Set())
   const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
+  const [demoUser, setDemoUser] = useState('')
+
+  // Select a random popular user on mount to offer a demo experience
+  useEffect(() => {
+    const popularUsers = [
+      'karsten', 
+      'mscorsese', 
+      'girlactress', 
+      'itscharlibb', 
+      'tedsmovies', 
+      'seanbaker', 
+      'francisfcoppola', 
+      'jimmycthatsme'
+    ]
+    const randomUser = popularUsers[Math.floor(Math.random() * popularUsers.length)]
+    setDemoUser(randomUser)
+  }, [])
   
   // Initialize restoring state synchronously to avoid flashing the home page
   const [isRestoring, setIsRestoring] = useState(() => {
@@ -403,21 +420,13 @@ function App() {
                 </form>
 
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '-4px', lineHeight: '1.4' }}>
-                  ...or try:{' '}
+                  no account? try with{' '}
                   <button
                     type="button"
-                    onClick={() => handleDemoClick('letterboxd')}
+                    onClick={() => handleDemoClick(demoUser)}
                     style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit', fontFamily: 'inherit', display: 'inline' }}
                   >
-                    official
-                  </button>
-                  {' '}or{' '}
-                  <button
-                    type="button"
-                    onClick={() => handleDemoClick('karsten')}
-                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit', fontFamily: 'inherit', display: 'inline' }}
-                  >
-                    the top username of this week
+                    {demoUser}
                   </button>
                 </p>
 
@@ -429,7 +438,7 @@ function App() {
                 )}
 
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  We'll fetch your recent watches via your public profile. No Letterboxd login required.
+                  We'll fetch recent watches via the public profile. No Letterboxd login required.
                 </p>
               </div>
             </>
