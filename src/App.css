@@ -173,12 +173,23 @@
   position: relative;
   width: 100%;
   max-width: 480px;
+  min-width: 0;
+  box-sizing: border-box;
   background: rgba(24, 24, 27, 0.85); /* Slightly darker/more opaque glass for embed */
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 36px 16px 16px 16px;
+  padding: 40px 16px 16px 16px;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
+
+.modal-card iframe {
+  width: 1px;
+  min-width: 100%;
+  max-width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
 
 .modal-close-btn {
   position: absolute;

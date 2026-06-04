@@ -101,14 +101,14 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              className="btn btn-primary"
+              className="btn btn-secondary"
               style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
               onClick={() => onPreview(playlist.id)}
             >
               Preview
             </button>
             <button
-              className="btn btn-secondary"
+              className="btn btn-primary"
               style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
               onClick={() => onSave(playlist.id)}
               disabled={savedPlaylists.has(playlist.id)}
@@ -520,24 +520,13 @@ function App() {
           </button>
           <iframe
             src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
-            width="100%"
             height="380"
             frameBorder="0"
             allowFullScreen=""
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
-            style={{ borderRadius: '12px', border: 'none' }}
+            style={{ border: 'none' }}
           ></iframe>
-          <p style={{
-            fontSize: '0.75rem',
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            marginTop: '12px',
-            lineHeight: '1.4',
-            padding: '0 8px'
-          }}>
-            Note: On mobile, Spotify requires you to be logged in to Spotify in your mobile browser, or it may redirect to the Spotify app to play previews.
-          </p>
         </div>
       </div>
     )}
