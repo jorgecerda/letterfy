@@ -3,6 +3,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .navbar {
@@ -254,7 +255,7 @@
     padding: 24px 0 32px 0;
   }
   .hero-title {
-    font-size: 2.25rem;
+    font-size: 2.6rem;
     margin-bottom: 12px;
   }
   .hero-subtitle {
