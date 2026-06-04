@@ -1,27 +1,53 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Music, Film, ArrowRight, CheckCircle, ExternalLink, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import { fetchLetterboxdRSS } from './utils/letterboxd'
 import { loginToSpotify, getTokenFromCode, getStoredToken, searchSpotifyPlaylists, followPlaylist } from './utils/spotify'
 import './App.css'
 
-function PlaylistGrid({ movie, spotifyToken, savedPlaylists, onSave }) {
+function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, headerRef }) {
   const [playlists, setPlaylists] = useState(null) // null = not fetched yet
   const [loading, setLoading] = useState(false)
+  const openTimeRef = useRef(0)
+
+  // Track the timestamp when this accordion was expanded
+  useEffect(() => {
+    if (isOpen) {
+      openTimeRef.current = Date.now()
+    } else {
+      openTimeRef.current = 0
+    }
+  }, [isOpen])
 
   useEffect(() => {
-    if (!spotifyToken) return
+    if (!spotifyToken || !isOpen || playlists !== null) return
     setLoading(true)
     searchSpotifyPlaylists(spotifyToken, movie.searchTitle)
       .then(results => setPlaylists(results))
       .catch(() => setPlaylists([]))
       .finally(() => setLoading(false))
-  }, [movie.searchTitle, spotifyToken])
+  }, [movie.searchTitle, spotifyToken, isOpen, playlists])
+
+  // Coordinated scroll: scroll only when the transition has finished and playlists are rendered
+  useEffect(() => {
+    if (isOpen && playlists !== null && !loading && spotifyToken && headerRef) {
+      const elapsed = Date.now() - openTimeRef.current
+      // Ensure we wait at least 300ms since expansion started, and at least 100ms for painting
+      const delay = Math.max(300 - elapsed, 100)
+
+      const timer = setTimeout(() => {
+        if (headerRef.current) {
+          headerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, delay)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, playlists, loading, spotifyToken, headerRef])
 
   if (!spotifyToken) {
     return (
       <div style={{ padding: '24px', textAlign: 'center' }}>
         <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Connect Spotify to find playlists.</p>
-        <button className="btn btn-primary" onClick={loginToSpotify}>Connect Spotify</button>
+        <button className="btn btn-primary" onClick={() => loginToSpotify(username, movie.title)}>Connect Spotify</button>
       </div>
     )
   }
@@ -78,48 +104,69 @@ function PlaylistGrid({ movie, spotifyToken, savedPlaylists, onSave }) {
   )
 }
 
-function AccordionItem({ movie, spotifyToken, savedPlaylists, onSave }) {
-  const [open, setOpen] = useState(false)
+function AccordionItem({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, onToggle }) {
+  const headerRef = useRef(null)
+
+  useEffect(() => {
+    // Only scroll directly from AccordionItem if NOT connected to Spotify.
+    // If connected to Spotify, PlaylistGrid will coordinate the scroll after loading content.
+    if (isOpen && !spotifyToken) {
+      const timer = setTimeout(() => {
+        if (headerRef.current) {
+          headerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300) // Wait 300ms for height transitions to complete
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, spotifyToken])
 
   return (
     <div
       className="glass-panel"
       style={{
         width: '100%',
-        border: open ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+        border: isOpen ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
         transition: 'border-color 0.2s ease',
         overflow: 'hidden'
       }}
     >
       {/* Header row */}
       <div
-        onClick={() => setOpen(o => !o)}
+        ref={headerRef}
+        onClick={onToggle}
         style={{
           padding: '16px 20px',
           cursor: 'pointer',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          userSelect: 'none'
+          userSelect: 'none',
+          scrollMarginTop: '24px' // Breathing room at top of viewport
         }}
       >
         <h3 style={{ fontSize: '1.05rem', margin: 0, lineHeight: '1.3' }}>{movie.title}</h3>
         <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', flexShrink: 0, marginLeft: '16px' }}>
-          {open ? <><ChevronUp size={18} /> Hide playlists</> : <><ChevronDown size={18} /> Find playlists</>}
+          {isOpen ? <><ChevronUp size={18} /> Hide playlists</> : <><ChevronDown size={18} /> Find playlists</>}
         </span>
       </div>
 
-      {/* Expandable content */}
-      {open && (
-        <div style={{ borderTop: '1px solid var(--glass-border)' }}>
+      {/* Expandable content wrapper with CSS Grid Height Animation */}
+      <div 
+        className={`accordion-content ${isOpen ? 'expanded' : ''}`}
+        style={{ borderTop: isOpen ? '1px solid var(--glass-border)' : '1px solid transparent' }}
+      >
+        <div style={{ minHeight: 0 }}>
           <PlaylistGrid
             movie={movie}
+            username={username}
             spotifyToken={spotifyToken}
             savedPlaylists={savedPlaylists}
             onSave={onSave}
+            isOpen={isOpen}
+            headerRef={headerRef}
           />
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -131,6 +178,15 @@ function App() {
   const [movies, setMovies] = useState([])
   const [error, setError] = useState(null)
   const [savedPlaylists, setSavedPlaylists] = useState(new Set())
+  const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
+  
+  // Initialize restoring state synchronously to avoid flashing the home page
+  const [isRestoring, setIsRestoring] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
+    const savedUsername = window.localStorage.getItem('restore_letterboxd_username')
+    return !!(code || savedUsername)
+  })
 
   // Debug log on start to help identify config mismatches
   useEffect(() => {
@@ -147,15 +203,56 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const code = urlParams.get('code')
-    if (code) {
-      getTokenFromCode(code).then(token => {
-        if (token) setSpotifyToken(token)
-        window.history.replaceState({}, document.title, window.location.pathname)
-      })
-    } else {
-      const stored = getStoredToken()
-      if (stored) setSpotifyToken(stored)
+    
+    const initializeToken = async () => {
+      let token = null
+      try {
+        if (code) {
+          token = await getTokenFromCode(code)
+          window.history.replaceState({}, document.title, window.location.pathname)
+        } else {
+          token = getStoredToken()
+        }
+
+        if (token) {
+          setSpotifyToken(token)
+
+          // Restore username and expanded movie if they were stored prior to login redirect
+          const savedUsername = window.localStorage.getItem('restore_letterboxd_username')
+          const savedMovieTitle = window.localStorage.getItem('restore_active_movie_title')
+
+          if (savedUsername) {
+            setUsername(savedUsername)
+            setLoading(true)
+            setError(null)
+            try {
+              const items = await fetchLetterboxdRSS(savedUsername)
+              if (items.length === 0) {
+                setError(`No activity found for "${savedUsername}". Make sure the profile is public and the username is correct.`)
+              } else {
+                setMovies(items)
+                if (savedMovieTitle) {
+                  setExpandedMovieTitle(savedMovieTitle)
+                }
+              }
+            } catch (err) {
+              console.error("Auto-restore failed:", err)
+            } finally {
+              setLoading(false)
+              // Clear restore state so it doesn't run again on reload
+              window.localStorage.removeItem('restore_letterboxd_username')
+              window.localStorage.removeItem('restore_active_movie_title')
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Token initialization failed:", err)
+      } finally {
+        setIsRestoring(false)
+      }
     }
+
+    initializeToken()
   }, [])
 
   const handleConnect = async (e) => {
@@ -164,6 +261,7 @@ function App() {
     setLoading(true)
     setError(null)
     setMovies([])
+    setExpandedMovieTitle(null) // Reset expanded movie on new search
     try {
       const items = await fetchLetterboxdRSS(username.trim())
       if (items.length === 0) {
@@ -187,11 +285,32 @@ function App() {
     }
   }, [spotifyToken])
 
+  if (isRestoring) {
+    return (
+      <div className="app-container">
+        <div className="restore-loading-container">
+          <div className="restore-loading-card glass-panel">
+            <div className="restore-loading-icon">
+              <div className="restore-loading-pulse"></div>
+              <Music size={32} />
+            </div>
+            <div>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Connecting Spotify</h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                Restoring your cinema diary and syncing playlists...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="app-container">
       <div className="container">
         <nav className="navbar">
-          <div className="logo text-gradient" style={{ cursor: movies.length > 0 ? 'pointer' : 'default' }} onClick={() => { setMovies([]); setError(null) }}>
+          <div className="logo text-gradient" style={{ cursor: movies.length > 0 ? 'pointer' : 'default' }} onClick={() => { setMovies([]); setError(null); setExpandedMovieTitle(null) }}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" width="28" height="28" style={{ flexShrink: 0 }}>
               <path d="M 80,284 A 176,176 0 0,1 432,284" stroke="#1db954" strokeWidth="44" strokeLinecap="round" />
               <rect x="44" y="254" width="72" height="150" rx="36" fill="#1db954" />
@@ -200,7 +319,7 @@ function App() {
             Letterfy
           </div>
           {!spotifyToken ? (
-            <button className="btn btn-secondary" onClick={loginToSpotify}>
+            <button className="btn btn-secondary" onClick={() => loginToSpotify(username, expandedMovieTitle)}>
               <Music size={18} />
               Login with Spotify
             </button>
@@ -270,9 +389,12 @@ function App() {
                   <AccordionItem
                     key={idx}
                     movie={movie}
+                    username={username}
                     spotifyToken={spotifyToken}
                     savedPlaylists={savedPlaylists}
                     onSave={handleSavePlaylist}
+                    isOpen={expandedMovieTitle === movie.title}
+                    onToggle={() => setExpandedMovieTitle(expandedMovieTitle === movie.title ? null : movie.title)}
                   />
                 ))}
               </div>

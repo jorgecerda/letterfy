@@ -27,12 +27,20 @@ const base64encode = (input) => {
     .replace(/\//g, '_');
 }
 
-export const loginToSpotify = async () => {
+export const loginToSpotify = async (username = '', activeMovieTitle = '') => {
   if (!CLIENT_ID) {
     const errorMsg = "Spotify Client ID (VITE_SPOTIFY_CLIENT_ID) is missing! Please set this variable in your Netlify Environment Variables (and trigger a redeploy) or local .env file.";
     alert(errorMsg);
     console.error(errorMsg);
     return;
+  }
+
+  // Save state for restoration after authentication redirect
+  if (username) {
+    window.localStorage.setItem('restore_letterboxd_username', username);
+  }
+  if (activeMovieTitle) {
+    window.localStorage.setItem('restore_active_movie_title', activeMovieTitle);
   }
 
   const codeVerifier = generateRandomString(64);
