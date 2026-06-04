@@ -159,22 +159,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 9999;
-  padding: 16px;
 }
 
 .modal-card {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: calc(100% - 32px);
   max-width: 480px;
   box-sizing: border-box;
-  background: rgba(24, 24, 27, 0.85); /* Slightly darker/more opaque glass for embed */
+  background: rgba(24, 24, 27, 0.9); /* Slightly darker/more opaque glass for embed */
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 40px 16px 16px 16px;
   border-radius: var(--radius-lg);
