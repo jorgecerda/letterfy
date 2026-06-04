@@ -241,19 +241,14 @@ function App() {
       'jimmycthatsme',
       'edgarwright',
       'davidehrlich',
-      'bratpitt',
       'demiadejuyigbe',
-      'gemmacr',
       'silentdawn',
       'zoerosebryant',
       'blankcheck',
-      'insomniac',
       'scruffy',
       'hoops',
-      'monika',
       'lucy',
       'jokerswild',
-      'davidl',
       'kyleharris'
     ]
     const randomUser = popularUsers[Math.floor(Math.random() * popularUsers.length)]
