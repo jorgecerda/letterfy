@@ -180,6 +180,20 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
+@media (max-width: 480px) {
+  .modal-card {
+    width: calc(100% - 16px);
+    padding: 36px 8px 8px 8px;
+  }
+  .modal-close-btn {
+    top: 4px;
+    right: 4px;
+    font-size: 1.5rem;
+    width: 28px;
+    height: 28px;
+  }
+}
+
 .spotify-embed-wrapper {
   position: relative;
   width: 100%;
