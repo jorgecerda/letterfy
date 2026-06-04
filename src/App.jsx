@@ -211,7 +211,24 @@ function App() {
       'tedsmovies', 
       'seanbaker', 
       'francisfcoppola', 
-      'jimmycthatsme'
+      'jimmycthatsme',
+      'edgarwright',
+      'davidehrlich',
+      'bratpitt',
+      'demiadejuyigbe',
+      'gemmacr',
+      'silentdawn',
+      'zoerosebryant',
+      'blankcheck',
+      'insomniac',
+      'scruffy',
+      'hoops',
+      'monika',
+      'sallyjaneblack',
+      'lucy',
+      'jokerswild',
+      'davidl',
+      'kyleharris'
     ]
     const randomUser = popularUsers[Math.floor(Math.random() * popularUsers.length)]
     setDemoUser(randomUser)
