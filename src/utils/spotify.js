@@ -1,4 +1,6 @@
 // Utility for interacting with Spotify Web API using PKCE flow
+import { sha256 as jsSha256 } from 'js-sha256';
+
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = window.location.origin + '/';
 
@@ -15,9 +17,13 @@ const generateRandomString = (length) => {
 }
 
 const sha256 = async (plain) => {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(plain)
-  return window.crypto.subtle.digest('SHA-256', data)
+  if (window.crypto && window.crypto.subtle) {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(plain)
+    return window.crypto.subtle.digest('SHA-256', data)
+  }
+  // Fallback for insecure contexts (like testing on local network Wi-Fi)
+  return jsSha256.arrayBuffer(plain);
 }
 
 const base64encode = (input) => {
