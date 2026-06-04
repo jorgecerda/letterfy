@@ -45,9 +45,29 @@ function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, i
 
   if (!spotifyToken) {
     return (
-      <div style={{ padding: '24px', textAlign: 'center' }}>
-        <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>Connect Spotify to find playlists.</p>
-        <button className="btn btn-primary" onClick={() => loginToSpotify(username, movie.title)}>Connect Spotify</button>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', padding: '20px 24px', alignItems: 'center', flexWrap: 'wrap' }}>
+        {movie.posterUrl && (
+          <img
+            src={movie.posterUrl}
+            alt={movie.title}
+            style={{
+              width: '90px',
+              aspectRatio: '2/3',
+              borderRadius: '6px',
+              boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+              border: '1px solid var(--glass-border)',
+              objectFit: 'cover'
+            }}
+          />
+        )}
+        <div style={{ flex: 1, minWidth: '200px' }}>
+          <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            Connect Spotify to find playlists for <strong>{movie.title}</strong>.
+          </p>
+          <button className="btn btn-primary" onClick={() => loginToSpotify(username, movie.title)}>
+            <Music size={18} /> Connect Spotify
+          </button>
+        </div>
       </div>
     )
   }
@@ -276,6 +296,26 @@ function App() {
     }
   }
 
+  const handleDemoClick = async (demoUsername) => {
+    setUsername(demoUsername)
+    setLoading(true)
+    setError(null)
+    setMovies([])
+    setExpandedMovieTitle(null)
+    try {
+      const items = await fetchLetterboxdRSS(demoUsername)
+      if (items.length === 0) {
+        setError(`No activity found for "${demoUsername}". Make sure the profile is public and the username is correct.`)
+      } else {
+        setMovies(items)
+      }
+    } catch (err) {
+      setError(`Could not find a Letterboxd account for "${demoUsername}". Please try again.`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSavePlaylist = useCallback(async (playlistId) => {
     try {
       await followPlaylist(spotifyToken, playlistId)
@@ -361,6 +401,25 @@ function App() {
                     {!loading && <ArrowRight size={18} />}
                   </button>
                 </form>
+
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '-4px', lineHeight: '1.4' }}>
+                  ...or try:{' '}
+                  <button
+                    type="button"
+                    onClick={() => handleDemoClick('letterboxd')}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit', fontFamily: 'inherit', display: 'inline' }}
+                  >
+                    official
+                  </button>
+                  {' '}or{' '}
+                  <button
+                    type="button"
+                    onClick={() => handleDemoClick('karsten')}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', textDecoration: 'underline', padding: 0, fontSize: 'inherit', fontFamily: 'inherit', display: 'inline' }}
+                  >
+                    the top username of this week
+                  </button>
+                </p>
 
                 {error && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '14px 16px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 80, 80, 0.1)', border: '1px solid rgba(255, 80, 80, 0.3)' }}>
