@@ -251,7 +251,6 @@ function App() {
       'scruffy',
       'hoops',
       'monika',
-      'sallyjaneblack',
       'lucy',
       'jokerswild',
       'davidl',
