@@ -1,209 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Music, Film, ArrowRight, CheckCircle, ExternalLink, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Music, ArrowRight, AlertCircle, Power } from 'lucide-react'
 import { fetchLetterboxdRSS } from './utils/letterboxd'
-import { loginToSpotify, getTokenFromCode, getStoredToken, searchSpotifyPlaylists, followPlaylist } from './utils/spotify'
+import { loginToSpotify, getTokenFromCode, getStoredToken, logoutFromSpotify, followPlaylist } from './utils/spotify'
+import AccordionItem from './components/AccordionItem'
+import PreviewModal from './components/PreviewModal'
 import './App.css'
-
-function PlaylistGrid({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, headerRef, onPreview }) {
-  const [playlists, setPlaylists] = useState(null) // null = not fetched yet
-  const [loading, setLoading] = useState(false)
-  const openTimeRef = useRef(0)
-
-  // Track the timestamp when this accordion was expanded
-  useEffect(() => {
-    if (isOpen) {
-      openTimeRef.current = Date.now()
-    } else {
-      openTimeRef.current = 0
-    }
-  }, [isOpen])
-
-  useEffect(() => {
-    if (!spotifyToken || !isOpen || playlists !== null) return
-    setLoading(true)
-    searchSpotifyPlaylists(spotifyToken, movie.searchTitle)
-      .then(results => setPlaylists(results))
-      .catch(() => setPlaylists([]))
-      .finally(() => setLoading(false))
-  }, [movie.searchTitle, spotifyToken, isOpen, playlists])
-
-  // Coordinated scroll: scroll only when the transition has finished and playlists are rendered
-  useEffect(() => {
-    if (isOpen && playlists !== null && !loading && spotifyToken && headerRef) {
-      const elapsed = Date.now() - openTimeRef.current
-      // Ensure we wait at least 300ms since expansion started, and at least 100ms for painting
-      const delay = Math.max(300 - elapsed, 100)
-
-      const timer = setTimeout(() => {
-        if (headerRef.current) {
-          headerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      }, delay)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen, playlists, loading, spotifyToken, headerRef])
-
-  if (!spotifyToken) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', padding: '20px 24px', alignItems: 'center', flexWrap: 'wrap' }}>
-        {movie.posterUrl && (
-          <img
-            src={movie.posterUrl}
-            alt={movie.title}
-            style={{
-              width: '90px',
-              aspectRatio: '2/3',
-              borderRadius: '6px',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
-              border: '1px solid var(--glass-border)',
-              objectFit: 'cover'
-            }}
-          />
-        )}
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <p style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            Connect Spotify to find playlists for <strong>{movie.title}</strong>.
-          </p>
-          <button className="btn btn-primary" onClick={() => loginToSpotify(username, movie.title)}>
-            <Music size={18} /> Connect Spotify
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return <p style={{ padding: '16px 24px', color: 'var(--text-secondary)' }}>Searching Spotify...</p>
-  }
-
-  if (!playlists || playlists.length === 0) {
-    return <p style={{ padding: '16px 24px', color: 'var(--text-secondary)' }}>No playlists found for this title.</p>
-  }
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', padding: '16px 24px 24px' }}>
-      {playlists.filter(p => p != null).map(playlist => (
-        <div key={playlist.id} className="glass-panel" style={{ padding: '12px', display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.04)' }}>
-          {playlist.images && playlist.images.length > 0 ? (
-            <img
-              src={playlist.images[0]?.url}
-              alt={playlist.name}
-              onClick={() => onPreview(playlist.id)}
-              className="playlist-cover-clickable"
-              style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', aspectRatio: '1/1', objectFit: 'cover' }}
-            />
-          ) : (
-            <div
-              onClick={() => onPreview(playlist.id)}
-              className="playlist-cover-clickable"
-              style={{ width: '100%', borderRadius: '8px', marginBottom: '12px', aspectRatio: '1/1', backgroundColor: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Music size={36} color="var(--text-secondary)" />
-            </div>
-          )}
-          <h4 style={{ fontSize: '0.9rem', marginBottom: '4px', lineHeight: '1.3' }}>{playlist.name}</h4>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px', flex: 1 }}>
-            By {playlist.owner?.display_name || 'Spotify'}
-          </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className="btn btn-secondary"
-              style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
-              onClick={() => onPreview(playlist.id)}
-            >
-              Preview
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ flex: 1, padding: '6px 8px', fontSize: '0.8rem' }}
-              onClick={() => onSave(playlist.id)}
-              disabled={savedPlaylists.has(playlist.id)}
-            >
-              {savedPlaylists.has(playlist.id) ? '✓ Saved' : 'Save'}
-            </button>
-            <a
-              href={playlist.external_urls?.spotify}
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-secondary"
-              style={{ padding: '6px 8px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <ExternalLink size={16} />
-            </a>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function AccordionItem({ movie, username, spotifyToken, savedPlaylists, onSave, isOpen, onToggle, onPreview }) {
-  const headerRef = useRef(null)
-
-  useEffect(() => {
-    // Only scroll directly from AccordionItem if NOT connected to Spotify.
-    // If connected to Spotify, PlaylistGrid will coordinate the scroll after loading content.
-    if (isOpen && !spotifyToken) {
-      const timer = setTimeout(() => {
-        if (headerRef.current) {
-          headerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-      }, 300) // Wait 300ms for height transitions to complete
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen, spotifyToken])
-
-  return (
-    <div
-      className="glass-panel"
-      style={{
-        width: '100%',
-        border: isOpen ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
-        transition: 'border-color 0.2s ease',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Header row */}
-      <div
-        ref={headerRef}
-        onClick={onToggle}
-        style={{
-          padding: '16px 20px',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          userSelect: 'none',
-          scrollMarginTop: '24px' // Breathing room at top of viewport
-        }}
-      >
-        <h3 style={{ fontSize: '1.05rem', margin: 0, lineHeight: '1.3' }}>{movie.title}</h3>
-        <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', flexShrink: 0, marginLeft: '16px' }}>
-          {isOpen ? <><ChevronUp size={18} /> Hide playlists</> : <><ChevronDown size={18} /> Find playlists</>}
-        </span>
-      </div>
-
-      {/* Expandable content wrapper with CSS Grid Height Animation */}
-      <div 
-        className={`accordion-content ${isOpen ? 'expanded' : ''}`}
-        style={{ borderTop: isOpen ? '1px solid var(--glass-border)' : '1px solid transparent' }}
-      >
-        <div style={{ minHeight: 0 }}>
-          <PlaylistGrid
-            movie={movie}
-            username={username}
-            spotifyToken={spotifyToken}
-            savedPlaylists={savedPlaylists}
-            onSave={onSave}
-            isOpen={isOpen}
-            headerRef={headerRef}
-            onPreview={onPreview}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function App() {
   const [username, setUsername] = useState('')
@@ -215,18 +16,6 @@ function App() {
   const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
   const [demoUser, setDemoUser] = useState('')
   const [previewPlaylistId, setPreviewPlaylistId] = useState(null)
-
-  // Prevent background body scroll when the modal lightbox is open
-  useEffect(() => {
-    if (previewPlaylistId) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [previewPlaylistId])
 
   // Select a random popular user on mount to offer a demo experience
   useEffect(() => {
@@ -380,6 +169,11 @@ function App() {
     }
   }, [spotifyToken])
 
+  const handleDisconnect = () => {
+    logoutFromSpotify()
+    setSpotifyToken(null)
+  }
+
   if (isRestoring) {
     return (
       <div className="app-container">
@@ -420,10 +214,15 @@ function App() {
               Login with Spotify
             </button>
           ) : (
-            <div className="btn btn-secondary" style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}>
-              <CheckCircle size={18} />
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleDisconnect}
+              style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', cursor: 'pointer' }}
+              title="Click to disconnect Spotify"
+            >
+              <Power size={18} />
               Spotify Connected
-            </div>
+            </button>
           )}
         </nav>
 
@@ -513,24 +312,10 @@ function App() {
     </div>
 
     {previewPlaylistId && (
-      <div className="modal-overlay" onClick={() => setPreviewPlaylistId(null)}>
-        <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close-btn" onClick={() => setPreviewPlaylistId(null)} aria-label="Close Preview">
-            &times;
-          </button>
-          <div className="spotify-embed-wrapper">
-            <iframe
-              src={`https://open.spotify.com/embed/playlist/${previewPlaylistId}?utm_source=generator`}
-              height="380"
-              frameBorder="0"
-              allowFullScreen=""
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              style={{ border: 'none' }}
-            ></iframe>
-          </div>
-        </div>
-      </div>
+      <PreviewModal
+        playlistId={previewPlaylistId}
+        onClose={() => setPreviewPlaylistId(null)}
+      />
     )}
   </>
 )

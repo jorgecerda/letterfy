@@ -2,9 +2,8 @@ export const fetchLetterboxdRSS = async (username) => {
   try {
     let url;
     if (import.meta.env.DEV) {
-      // In development, use corsproxy.io to bypass CORS in the browser directly
-      const rssUrl = `https://letterboxd.com/${username}/rss/`;
-      url = `https://corsproxy.io/?url=${encodeURIComponent(rssUrl)}`;
+      // Use local Vite dev proxy to bypass CORS
+      url = `/letterboxd-proxy/${username}/rss/`;
     } else {
       // In production, fetch via our Netlify function (rewritten through /api/* redirect)
       url = `/api/rss?username=${encodeURIComponent(username)}`;
