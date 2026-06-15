@@ -37,7 +37,7 @@ const base64encode = (input) => {
 
 export const loginToSpotify = async (username = '', activeMovieTitle = '') => {
   if (!CLIENT_ID) {
-    const errorMsg = "Spotify Client ID (VITE_SPOTIFY_CLIENT_ID) is missing! Please set this variable in your Netlify Environment Variables (and trigger a redeploy) or local .env file.";
+    const errorMsg = "Spotify Client ID (VITE_SPOTIFY_CLIENT_ID) is missing! Please set this variable in your Vercel Environment Variables (and redeploy) or local .env file.";
     alert(errorMsg);
     console.error(errorMsg);
     return;

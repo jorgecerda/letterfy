@@ -1,6 +1,6 @@
 # letterfy
 
-https://letterfyio.netlify.app
+https://lf.crda.dev
 
 discover spotify playlists based on your letterboxd diary. letterfy bridges your film and music worlds. enter your letterboxd username to see your recent watches, then click any title to instantly find spotify playlists and soundtracks — and save them directly to your library.
 
@@ -28,7 +28,7 @@ this project uses the following dependencies:
 - **react & vite**: core framework and build toolchain
 - **js-sha256**: cryptographic sha-256 hashing fallback for secure pkce authorization in insecure local contexts
 - **lucide-react**: clean, responsive icons
-- **netlify functions**: serverless backend endpoint used to proxy the letterboxd rss feed
+- **vercel serverless functions**: serverless backend endpoint used to proxy the letterboxd rss feed
 
 ## getting started
 
@@ -74,29 +74,28 @@ letterfy/
 ├── .gitignore            # git ignore configuration
 ├── eslint.config.js      # eslint rules configuration
 ├── index.html            # html entry point
-├── netlify.toml          # netlify configuration
+├── vercel.json           # vercel routing and rewrites configuration
 ├── package-lock.json     # lockfile
 ├── package.json          # dependencies and scripts config
 ├── vite.config.js        # vite configuration
+├── api/                  # vercel serverless functions
+│   └── rss.js            # letterboxd cors proxy serverless function
 ├── public/               # static public assets
 │   └── favicon.svg       # favicon logo
-├── src/                  # source files
-│   ├── App.css           # global application css styles
-│   ├── App.jsx           # main application router & layout component
-│   ├── index.css         # base css reset & variables
-│   ├── main.jsx          # react mount entry point
-│   ├── components/       # react subcomponents
-│   │   ├── AccordionItem.jsx   # movie accordion wrapper component
-│   │   ├── PlaylistGrid.jsx    # spotify playlist grid component
-│   │   └── PreviewModal.jsx    # spotify player iframe modal component
-│   └── utils/            # helper utility scripts
-│       ├── letterboxd.js # letterboxd rss feed fetcher logic
-│       └── spotify.js    # spotify api oauth & token manager logic
-└── netlify/              # serverless netlify functions
-    └── functions/
-        └── rss.js        # letterboxd cors proxy serverless function
+└── src/                  # source files
+    ├── App.css           # global application css styles
+    ├── App.jsx           # main application router & layout component
+    ├── index.css         # base css reset & variables
+    ├── main.jsx          # react mount entry point
+    ├── components/       # react subcomponents
+    │   ├── AccordionItem.jsx   # movie accordion wrapper component
+    │   ├── PlaylistGrid.jsx    # spotify playlist grid component
+    │   └── PreviewModal.jsx    # spotify player iframe modal component
+    └── utils/            # helper utility scripts
+        ├── letterboxd.js # letterboxd rss feed fetcher logic
+        └── spotify.js    # spotify api oauth & token manager logic
 ```
 
 ## deployment
 
-this project is built to be hosted on any static hosting provider. it is currently configured for continuous deployment via netlify. simply push to the main branch, and the live site updates automatically.
+this project is built to be hosted on any static hosting provider. it is currently configured for continuous deployment via vercel. simply push to the main branch, and the live site updates automatically.

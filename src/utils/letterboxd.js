@@ -5,7 +5,7 @@ export const fetchLetterboxdRSS = async (username) => {
       // Use local Vite dev proxy to bypass CORS
       url = `/letterboxd-proxy/${username}/rss/`;
     } else {
-      // In production, fetch via our Netlify function (rewritten through /api/* redirect)
+      // In production, fetch via our Vercel serverless function
       url = `/api/rss?username=${encodeURIComponent(username)}`;
     }
     
