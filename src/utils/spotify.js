@@ -113,6 +113,7 @@ export const logoutFromSpotify = () => {
   localStorage.removeItem('spotify_token_expires_at');
   localStorage.removeItem('restore_letterboxd_username');
   localStorage.removeItem('restore_active_movie_title');
+  localStorage.removeItem('spotify_saved_playlist_ids');
 };
 
 export const refreshSpotifyToken = async () => {

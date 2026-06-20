@@ -6,40 +6,57 @@ import AccordionItem from './components/AccordionItem'
 import PreviewModal from './components/PreviewModal'
 import './App.css'
 
+const popularUsers = [
+  'karsten', 
+  'mscorsese', 
+  'girlactress', 
+  'itscharlibb', 
+  'tedsmovies', 
+  'seanbaker', 
+  'francisfcoppola', 
+  'jimmycthatsme',
+  'edgarwright',
+  'davidehrlich',
+  'demiadejuyigbe',
+  'silentdawn',
+  'zoerosebryant',
+  'blankcheck',
+  'scruffy',
+  'hoops',
+  'lucy',
+  'jokerswild',
+  'kyleharris'
+]
+
 function App() {
   const [username, setUsername] = useState('')
   const [spotifyToken, setSpotifyToken] = useState(null)
   const [loading, setLoading] = useState(false)
   const [movies, setMovies] = useState([])
   const [error, setError] = useState(null)
-  const [savedPlaylists, setSavedPlaylists] = useState(new Set())
+  const [savedPlaylists, setSavedPlaylists] = useState(() => {
+    try {
+      const saved = localStorage.getItem('spotify_saved_playlist_ids')
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch (e) {
+      return new Set()
+    }
+  })
   const [expandedMovieTitle, setExpandedMovieTitle] = useState(null)
   const [demoUser, setDemoUser] = useState('')
   const [previewPlaylistId, setPreviewPlaylistId] = useState(null)
 
+  // Persist followed/saved playlist IDs locally to preserve UI state across reloads
+  useEffect(() => {
+    try {
+      localStorage.setItem('spotify_saved_playlist_ids', JSON.stringify(Array.from(savedPlaylists)))
+    } catch (e) {
+      console.error("Failed to save playlist IDs to localStorage:", e)
+    }
+  }, [savedPlaylists])
+
   // Select a random popular user on mount to offer a demo experience
   useEffect(() => {
-    const popularUsers = [
-      'karsten', 
-      'mscorsese', 
-      'girlactress', 
-      'itscharlibb', 
-      'tedsmovies', 
-      'seanbaker', 
-      'francisfcoppola', 
-      'jimmycthatsme',
-      'edgarwright',
-      'davidehrlich',
-      'demiadejuyigbe',
-      'silentdawn',
-      'zoerosebryant',
-      'blankcheck',
-      'scruffy',
-      'hoops',
-      'lucy',
-      'jokerswild',
-      'kyleharris'
-    ]
     const randomUser = popularUsers[Math.floor(Math.random() * popularUsers.length)]
     setDemoUser(randomUser)
   }, [])
@@ -54,13 +71,15 @@ function App() {
 
   // Debug log on start to help identify config mismatches
   useEffect(() => {
-    const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-    const redirectUri = window.location.origin + '/';
-    console.log("=== Letterfy Config Info ===");
-    console.log("Vite Mode:", import.meta.env.MODE);
-    console.log("Spotify Client ID:", clientId ? `${clientId.substring(0, 4)}...${clientId.substring(clientId.length - 4)}` : "MISSING ❌");
-    console.log("Spotify Redirect URI:", redirectUri);
-    console.log("============================");
+    if (import.meta.env.DEV) {
+      const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+      const redirectUri = window.location.origin + '/';
+      console.log("=== Letterfy Config Info ===");
+      console.log("Vite Mode:", import.meta.env.MODE);
+      console.log("Spotify Client ID:", clientId ? `${clientId.substring(0, 4)}...${clientId.substring(clientId.length - 4)}` : "MISSING ❌");
+      console.log("Spotify Redirect URI:", redirectUri);
+      console.log("============================");
+    }
   }, []);
 
   // Check for Spotify token on load
@@ -110,6 +129,7 @@ function App() {
           }
         }
       } catch (err) {
+        setError("Spotify authentication failed. Please try connecting your account again.")
         console.error("Token initialization failed:", err)
       } finally {
         setIsRestoring(false)
@@ -172,6 +192,7 @@ function App() {
   const handleDisconnect = () => {
     logoutFromSpotify()
     setSpotifyToken(null)
+    setSavedPlaylists(new Set())
   }
 
   if (isRestoring) {
